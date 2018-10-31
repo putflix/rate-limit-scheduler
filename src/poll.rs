@@ -13,7 +13,6 @@ use types::{
     PollQueueItemsResponse,
     QueueItem,
     QueueItemFeedback,
-    QueueItemFeedbackRequest,
 };
 
 /// A set of configuration options for running the rate limited scheduler.
@@ -131,9 +130,7 @@ fn report_feedback(
         .and_then(move |feedback| {
             client.post(&cfg.remote_url)
                 .header(AUTHORIZATION, format!("Bearer {}", cfg.auth_token))
-                .json(&QueueItemFeedbackRequest {
-                    items: vec![feedback]
-                })
+                .json(&feedback)
                 .send()
                 .then(|_| Ok(()))
         })

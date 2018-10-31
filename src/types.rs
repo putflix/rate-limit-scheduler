@@ -17,8 +17,3 @@ pub struct QueueItemFeedback {
     pub id: String,
     pub status: u16,
 }
-
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct QueueItemFeedbackRequest {
-    pub items: Vec<QueueItemFeedback>,
-}
