@@ -19,6 +19,7 @@ use types::{
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RunCfg {
     pub auth_token: String,
+    pub default_delay: Duration,
     pub max_inflight: usize,
     pub remote_url: String,
 }
@@ -70,6 +71,8 @@ fn fire_requests(
     item_rx: mpsc::Receiver<QueueItem>,
     feedback_tx: mpsc::Sender<QueueItemFeedback>,
 ) -> impl Future<Item = (), Error = Error> {
+    let default_delay = cfg.default_delay;
+
     let process_item = move |queue_item: QueueItem| {
         let cloned_feedback_tx = feedback_tx.clone();
 
@@ -102,7 +105,7 @@ fn fire_requests(
                     .get(RETRY_AFTER)
                     .and_then(|hval| hval.to_str().ok()) // header values aren't always ASCII strings
                     .and_then(get_http_header_deadline)
-                    .unwrap_or(Instant::now() + Duration::from_secs(20)); // 20s default
+                    .unwrap_or(Instant::now() + default_delay);
 
                 future::Either::B(
                     Delay::new(wait_deadline)

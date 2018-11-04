@@ -13,8 +13,10 @@ mod poll;
 mod types;
 
 use clap::{Arg, ArgMatches};
+use std::time::Duration;
 
 const AUTH_TOKEN_ARG: &str = "AUTH_TOKEN";
+const DEFAULT_429_DELAY: &str = "DEFAULT_DELAY";
 const MAX_INFLIGHT_ARG: &str = "MAX_PARALLELISM";
 const URL_ARG: &str = "URL";
 
@@ -26,6 +28,13 @@ fn main() {
                 .long("token")
                 .short("t")
                 .required(true)
+                .takes_value(true)
+        )
+        .arg(
+            Arg::with_name(DEFAULT_429_DELAY)
+                .help("The time to wait (in seconds) after receiving a 429 status code, if no Retry-After header was present.")
+                .long("delay")
+                .default_value("20")
                 .takes_value(true)
         )
         .arg(
@@ -48,8 +57,15 @@ fn main() {
 
     let cfg = poll::RunCfg {
         auth_token: matches.value_of(AUTH_TOKEN_ARG).unwrap().to_owned(),
-        max_inflight: matches.value_of(MAX_INFLIGHT_ARG).unwrap()
-            .parse().expect("Invalid parallelism number format"),
+        default_delay: matches.value_of(DEFAULT_429_DELAY)
+            .unwrap()
+            .parse()
+            .map(Duration::from_secs)
+            .expect("Invalid delay number format"),
+        max_inflight: matches.value_of(MAX_INFLIGHT_ARG)
+            .unwrap()
+            .parse()
+            .expect("Invalid parallelism number format"),
         remote_url: matches.value_of(URL_ARG).unwrap().to_owned(),
     };
     poll::run(cfg);
