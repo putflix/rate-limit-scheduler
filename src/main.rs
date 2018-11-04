@@ -33,7 +33,7 @@ fn main() {
                 .help("Maximum number of requests to be in flight at the same time.")
                 .long("parallel")
                 .short("p")
-                .default_value("10")
+                .default_value("1")
                 .takes_value(true)
         )
         .arg(
