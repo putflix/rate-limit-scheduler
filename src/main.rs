@@ -18,6 +18,7 @@ use std::time::Duration;
 const AUTH_TOKEN_ARG: &str = "AUTH_TOKEN";
 const DEFAULT_429_DELAY: &str = "DEFAULT_DELAY";
 const MAX_INFLIGHT_ARG: &str = "MAX_PARALLELISM";
+const POLL_INTERVAL: &str = "POLL_INTERVAL";
 const URL_ARG: &str = "URL";
 
 fn main() {
@@ -46,6 +47,14 @@ fn main() {
                 .takes_value(true)
         )
         .arg(
+            Arg::with_name(POLL_INTERVAL)
+                .help("The interval (in seconds) to poll for new queue items at.")
+                .short("i")
+                .long("poll-interval")
+                .default_value("10")
+                .takes_value(true)
+        )
+        .arg(
             Arg::with_name(URL_ARG)
                 .help("The URL to query for queue items.")
                 .long("url")
@@ -66,6 +75,11 @@ fn main() {
             .unwrap()
             .parse()
             .expect("Invalid parallelism number format"),
+        poll_interval: matches.value_of(POLL_INTERVAL)
+            .unwrap()
+            .parse()
+            .map(Duration::from_secs)
+            .expect("Invalid poll interval number format"),
         remote_url: matches.value_of(URL_ARG).unwrap().to_owned(),
     };
     poll::run(cfg);

@@ -8,7 +8,7 @@ use std::{
     io::{Error, ErrorKind},
     time::{Duration, Instant, SystemTime},
 };
-use tokio::{self, timer::Delay};
+use tokio::{self, prelude::StreamExt, timer::Delay};
 use types::{
     PollQueueItemsResponse,
     QueueItem,
@@ -21,6 +21,7 @@ pub struct RunCfg {
     pub auth_token: String,
     pub default_delay: Duration,
     pub max_inflight: usize,
+    pub poll_interval: Duration,
     pub remote_url: String,
 }
 
@@ -48,7 +49,12 @@ fn fetch_urls(
     client: Client,
     tx: mpsc::Sender<QueueItem>,
 ) -> impl Future<Item = (), Error = Error> {
-    stream::repeat(())
+    stream::repeat::<_, reqwest::Error>(())
+        .throttle(cfg.poll_interval)
+        .then(|res| match res {
+            Ok(_) => Ok(()),
+            Err(e) => panic!("Throttle timer failed: {:?}", e),
+        })
         .and_then(move |_| {
             client.get(&cfg.remote_url)
                 .header(AUTHORIZATION, format!("Bearer {}", cfg.auth_token))
