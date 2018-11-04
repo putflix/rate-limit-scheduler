@@ -51,7 +51,7 @@ fn fetch_urls(
         .and_then(move |_| {
             client.get(&cfg.remote_url)
                 .header(AUTHORIZATION, format!("Bearer {}", cfg.auth_token))
-                .query(&[("limit", cfg.max_inflight.to_string())])
+                .query(&[("limit", 10.max(cfg.max_inflight).to_string())])
                 .send()
         })
         .and_then(|res| res.error_for_status())
